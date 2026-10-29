@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Remoting.Lifetime;
 using System.Text;
 using System.Threading;
@@ -143,9 +144,47 @@ namespace Space_Mission_Simulator
             int successfulOperation = 0;
             bool mercuryExplore = false, marsExplore = false, europaExplore = false;
             int sellect=0;
-            while (sellect !=6)
+            int totalMercuryMinerals = 0;
+            bool oyunDevam = true;
+            bool canSimidi = false;
+            int keşifBonusu = 0;
+            bool mercuryMineralToplandımı = false, marsMineralToplandımı = false, EuropaMineralToplandımı = false;
+            while ( oyunDevam ==true)
             {
-                Console.WriteLine();
+                if (successfulOperation >= 5)
+                {
+                    Console.WriteLine("It is the end of the day!");
+                    oxygen -= 5;
+                    Console.WriteLine($"5 Oxygen consumed. Remaining: {oxygen}");
+
+                    if (oxygen <= 0)
+                    {
+                        Console.WriteLine("CRITICAL FAILURE: Oxygen depleted! Spaceship life support failed. GAME OVER!");
+                        oyunDevam = false;
+                        break;
+                    }
+
+                    if (oxygen <= 15 && !canSimidi)
+                    {
+                        oxygen += 20;
+                        if (oxygen > 100) oxygen = 100;
+                        canSimidi = true;
+                        Console.WriteLine("[LIFELINE ACTIVATED] Emergency Oxygen Reserves Deployed! +20 Oxygen added.");
+                        Console.WriteLine($"Current Oxygen: {oxygen}");
+                    }
+                    mercuryMineralToplandımı = false;
+                    marsMineralToplandımı = false;
+                    EuropaMineralToplandımı = false;
+                    keşifBonusu = 0;
+                    energy += 15;
+                    if (energy > 100) energy = 100;
+                    Console.WriteLine($"15 Energy restored. Remaining: {energy}");
+                    successfulOperation = 0;
+                    day++;
+                    Console.WriteLine($"Advancing to Day {day}...");
+                    continue;
+                }
+                Console.WriteLine("----------------------------------------------");
                 Console.Write("Day: ");
                 Console.WriteLine(day);
                 Console.Write("Current Location: ");
@@ -177,7 +216,7 @@ namespace Space_Mission_Simulator
                 Console.Write("Enter Your Choice: ");
                 string sellecta = (Console.ReadLine());
                 int.TryParse(sellecta, out sellect);
-                Console.WriteLine();
+                Console.WriteLine("----------------------------------------------");
                 while (sellect < 1 || sellect > 7)
                 {
                     Console.Write("Invaild input! Enter Your Choice (1-7): ");
@@ -223,10 +262,17 @@ namespace Space_Mission_Simulator
                                     }
                                     fuel -= 10;
                                     oxygen -= 8;
+                                    if (oxygen <= 15 && !canSimidi)
+                                    {
+                                        oxygen += 20;
+                                        canSimidi = true;
+                                        Console.WriteLine("\n[LIFELINE ACTIVATED] Emergency Oxygen Reserves Deployed! +20 Oxygen added.");
+                                    }
                                     currentLocation = "Mercury";
                                     Console.WriteLine("Travel successful! Welcome to Mercury.");
                                     Console.WriteLine($"Fuel consumed: 10. Remaining: {fuel}");
                                     Console.WriteLine($"Oxygen consumed: 8. Remaining: {oxygen}");
+                                    Console.WriteLine();
                                     travelCompleted = true;
                                     break;
 
@@ -248,6 +294,12 @@ namespace Space_Mission_Simulator
                                     }
                                     fuel -= 15;
                                     oxygen -= 12;
+                                    if (oxygen <= 15 && !canSimidi)
+                                    {
+                                        oxygen += 20;
+                                        canSimidi = true;
+                                        Console.WriteLine("\n[LIFELINE ACTIVATED] Emergency Oxygen Reserves Deployed! +20 Oxygen added.");
+                                    }
                                     currentLocation = "Mars";
                                     Console.WriteLine("Travel successful! Welcome to Mars.");
                                     Console.WriteLine($"Fuel consumed: 15. Remaining: {fuel}");
@@ -256,7 +308,7 @@ namespace Space_Mission_Simulator
                                     break;
 
                                 case 3:
-                                    if (mercuryExplore && marsExplore && inventory >= 4)
+                                    if (mercuryExplore && marsExplore && totalMercuryMinerals >= 4)
                                     {
                                         if (currentLocation == "Europa")
                                         {
@@ -275,6 +327,12 @@ namespace Space_Mission_Simulator
                                         }
                                         fuel -= 20;
                                         oxygen -= 16;
+                                        if (oxygen <= 15 && !canSimidi)
+                                        {
+                                            oxygen += 20;
+                                            canSimidi = true;
+                                            Console.WriteLine("\n[LIFELINE ACTIVATED] Emergency Oxygen Reserves Deployed! +20 Oxygen added.");
+                                        }
                                         currentLocation = "Europa";
                                         Console.WriteLine("Travel successful! Welcome to Europa.");
                                         Console.WriteLine($"Fuel consumed: 20. Remaining: {fuel}");
@@ -283,7 +341,7 @@ namespace Space_Mission_Simulator
                                     }
                                     else
                                     {
-                                        int neededMinerals = Math.Max(0, 4 - inventory);
+                                        int neededMinerals = Math.Max(0, 4 - totalMercuryMinerals);
 
                                         if (!mercuryExplore && !marsExplore)
                                         {
@@ -303,6 +361,7 @@ namespace Space_Mission_Simulator
                                         }
                                         Console.WriteLine();
                                     }
+                                   
                                     break;
                             }
                         }
@@ -324,12 +383,24 @@ namespace Space_Mission_Simulator
                             if (energy < 12)
                             {
                                 Console.WriteLine($"You doesn't enough energy. You need {8 - energy} energy.");
+                                break;
                             }
-
+                            keşifBonusu++;
+                            if (keşifBonusu >= 2)
+                            {
+                                missionScore += 10;
+                                Console.WriteLine("Consecutive Exploration Bonus! +10 Mission Points");
+                            }
                             mercuryExplore = true;
                             energy -= 12;
                             missionScore += 10;
                             health -= 5;
+                            if (health <= 0)
+                            {
+                                Console.WriteLine("CRITICAL FAILURE: Spaceship destroyed! GAME OVER!");
+                                oyunDevam = false;
+                                break;
+                            }
                             creadits += 15;
                             successfulOperation++;
                             Console.WriteLine($"Exploration successful! You explored {currentLocation}.");
@@ -353,11 +424,24 @@ namespace Space_Mission_Simulator
                             if (energy < 18)
                             {
                                 Console.WriteLine($"You doesn't enough energy. You need {18 - energy} energy.");
+                                break;
+                            }
+                            keşifBonusu++;
+                            if (keşifBonusu >= 2)
+                            {
+                                missionScore += 10;
+                                Console.WriteLine("Consecutive Exploration Bonus! +10 Mission Points");
                             }
                             marsExplore = true;
                             energy -= 18;
                             missionScore += 20;
                             health -= 10;
+                            if (health <= 0)
+                            {
+                                Console.WriteLine("CRITICAL FAILURE: Spaceship destroyed! GAME OVER!");
+                                oyunDevam = false;
+                                break;
+                            }
                             creadits += 25;
                             successfulOperation++;
                             Console.WriteLine($"Exploration successful! You explored {currentLocation}.");
@@ -371,65 +455,164 @@ namespace Space_Mission_Simulator
                             }
                             if (health < 60)
                             {
-                                Console.WriteLine($"You doesn't enough health. You need {31 - health} health.");
+                                Console.WriteLine($"You doesn't enough health. You need {60 - health} health.");
                                 break;
                             }
                             if (energy < 25)
                             {
                                 Console.WriteLine($"You doesn't enough energy. You need {25 - energy} energy.");
+                                break;
+                            }
+                            keşifBonusu++;
+                            if (keşifBonusu >= 2)
+                            {
+                                missionScore += 10;
+                                Console.WriteLine("Consecutive Exploration Bonus! +10 Mission Points");
                             }
                             europaExplore = true;
                             energy -= 25;
                             missionScore += 30;
                             health -= 15;
+                            if (health <= 0)
+                            {
+                                Console.WriteLine("CRITICAL FAILURE: Spaceship destroyed! GAME OVER!");
+                                oyunDevam = false;
+                                break;
+                            }
                             creadits += 40;
                             successfulOperation++;
                             Console.WriteLine($"Exploration successful! You explored {currentLocation}.");
+
                         }
                         else
                         {
                             // Oyuncu hala Space Station'daysa
                             Console.WriteLine("You are at the Space Station! Travel to a planet first to explore.");
                         }
+                        if (mercuryExplore && marsExplore && europaExplore)
+                        {
+                            missionScore += 50;
+                            Console.WriteLine();
+                            Console.WriteLine("*** ALL PLANETS EXPLORED! FINAL BONUS: +50 POINTS ***");
+                            Console.WriteLine("MISSION ACCOMPLISHED!");
+                            Console.WriteLine($"Final Mission Score: {missionScore}");
+                            Console.WriteLine("Thank you for playing Space Mission Simulator!");
+                            oyunDevam = false;
+                        }
                         break;
 
                     case 3:
-                        if(currentLocation=="Mercury")
+                        if(currentLocation=="Mercury" && mercuryExplore==true && mercuryMineralToplandımı==false)
                         {
-                            energy -= 8;
-                            successfulOperation++;
-                            inventory += 2;
-                            Console.WriteLine("Mineral collection successful!");
-                            Console.WriteLine($"Energy consumed: 8. Remaining: {energy} ");
-                            Console.WriteLine($"Collected 2 minerals from Mercury.");
-                            Console.WriteLine($"Current successful field operations: {successfulOperation}");
+                            if (energy < 8)
+                            {
+                                Console.WriteLine("You does not enough energy.");
+                                break;
+                            }
+                            else
+                            {
+                                keşifBonusu = 0;
+                                mercuryMineralToplandımı = true;
+                                energy -= 8;
+                                successfulOperation++;
+                                inventory += 2;
+                                Console.WriteLine("Mineral collection successful!");
+                                Console.WriteLine($"Energy consumed: 8. Remaining: {energy} ");
+                                Console.WriteLine($"Collected 2 minerals from Mercury.");
+                                Console.WriteLine($"Current successful field operations: {successfulOperation}");
+                                totalMercuryMinerals += 2;
+
+                                break;
+                            }
+
+                        }
+                        if(currentLocation=="Mercury" && mercuryExplore==false)
+                        {
+                            
+                            Console.WriteLine($"You have to explore {currentLocation}");
                             break;
 
                         }
-                        if(currentLocation=="Mars")
+                        if(currentLocation=="Mercury" && mercuryMineralToplandımı==true)
                         {
-                            energy -= 8;
-                            successfulOperation++;
-                            inventory += 2;
-                            Console.WriteLine("Mineral collection successful!");
-                            Console.WriteLine($"Energy consumed: 8. Remaining: {energy} ");
-                            Console.WriteLine($"Collected 2 minerals from Mercury.");
-                            Console.WriteLine($"Current successful field operations: {successfulOperation}");
+                            
+                            Console.WriteLine($"You collect minerals today from {currentLocation}.So, you cannot coolect mineral from {currentLocation}");
                             break;
 
                         }
-                        if(currentLocation=="Europe")
+                        
+                        if(currentLocation=="Mars" && marsExplore==true && marsMineralToplandımı ==false)
                         {
-                            energy -= 8;
-                            successfulOperation++;
-                            inventory += 2;
-                            Console.WriteLine("Mineral collection successful!");
-                            Console.WriteLine($"Energy consumed: 8. Remaining: {energy} ");
-                            Console.WriteLine($"Collected 2 minerals from Mercury.");
-                            Console.WriteLine($"Current successful field operations: {successfulOperation}");
+                            if (energy < 10)
+                            {
+                                Console.WriteLine("You does not enough energy.");
+                                break;
+                            }
+                            else
+                            {
+                                keşifBonusu = 0;
+                                energy -= 10;
+                                successfulOperation++;
+                                inventory += 3;
+                                marsMineralToplandımı = true;
+                                Console.WriteLine("Mineral collection successful!");
+                                Console.WriteLine($"Energy consumed: 10. Remaining: {energy} ");
+                                Console.WriteLine($"Collected 3 minerals from Mars.");
+                                Console.WriteLine($"Current successful field operations: {successfulOperation}");
+                                break;
+                            }
+                        }
+                        if (currentLocation == "Mars" && marsExplore == false)
+                        {
+
+                            Console.WriteLine($"You have to explore {currentLocation}");
                             break;
 
                         }
+                        if (currentLocation == "Mars" && marsMineralToplandımı == true)
+                        {
+
+                            Console.WriteLine($"You collect minerals today from {currentLocation}.So, you cannot coolect mineral from {currentLocation}");
+                            break;
+
+                        }
+                        if (currentLocation=="Europa" && europaExplore==true && EuropaMineralToplandımı==false)
+                        {
+                            if (energy < 12)
+                            {
+                                Console.WriteLine("You does not enough energy.");
+                                break;
+                            }
+                            else
+                            {
+                                keşifBonusu = 0;
+                                energy -= 12;
+                                successfulOperation++;
+                                inventory += 4;
+                                EuropaMineralToplandımı = true;
+                                Console.WriteLine("Mineral collection successful!");
+                                Console.WriteLine($"Energy consumed: 12. Remaining: {energy} ");
+                                Console.WriteLine($"Collected 4 minerals from Europa.");
+                                Console.WriteLine($"Current successful field operations: {successfulOperation}");
+                                break;
+                            }
+
+                        }
+                        if (currentLocation == "Europa" && europaExplore == false)
+                        {
+
+                            Console.WriteLine($"You have to explore {currentLocation}");
+                            break;
+
+                        }
+                        if (currentLocation == "Europa" && EuropaMineralToplandımı == true)
+                        {
+
+                            Console.WriteLine($"You collect minerals today from {currentLocation}.So, you cannot coolect mineral from {currentLocation}");
+                            break;
+
+                        }
+
                         break;
 
                     case 4:
@@ -454,42 +637,142 @@ namespace Space_Mission_Simulator
                                 creadits = creadits + (inventory * 6);
                                 Console.WriteLine($"Current credits: {creadits}");
                                 Console.WriteLine();
+                                inventory = 0;
                             }
                             if (supplySellect == 1)
                             {
-                                Console.WriteLine($"Purchased 5 Fuel.");
-                                fuel = fuel + 5;
-                                creadits -= 12;
-                                Console.WriteLine($"Current credits: {creadits} C. Currrent fuel: {fuel}.");
-                                Console.WriteLine();
+                                if (creadits < 12)
+                                {
+                                    Console.WriteLine("You does not enough creadits");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Purchased 5 Fuel.");
+                                    fuel = fuel + 5;
+                                    if (fuel > 100) fuel = 100;
+                                    creadits -= 12;
+                                    Console.WriteLine($"Current credits: {creadits} C. Currrent fuel: {fuel}.");
+                                    Console.WriteLine();
+                                }
                             }
                             if (supplySellect == 2)
                             {
-                                Console.WriteLine($"Purchased 5 Oxygen.");
-                                oxygen = oxygen + 5;
-                                creadits -= 10;
-                                Console.WriteLine($"Current credits: {creadits} C. Currrent oxygen: {oxygen}.");
-                                Console.WriteLine();
+                                if (creadits < 10)
+                                {
+                                    Console.WriteLine("You does not enough creadits");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Purchased 5 Oxygen.");
+                                    oxygen = oxygen + 5;
+                                    if (oxygen > 100) oxygen = 100;
+                                    creadits -= 10;
+                                    Console.WriteLine($"Current credits: {creadits} C. Currrent oxygen: {oxygen}.");
+                                    Console.WriteLine();
+                                }
                             }
                             if (supplySellect == 3)
                             {
-                                Console.WriteLine($"Purchased 20 Oxygen.");
-                                energy = energy + 20;
-                                creadits -= 10;
-                                Console.WriteLine($"Current credits: {creadits} C. Currrent energy: {energy}.");
-                                Console.WriteLine();
+                                if (creadits < 10)
+                                {
+                                    Console.WriteLine("You does not enough creadits");
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Purchased 20 Energy.");
+                                    energy = energy + 20;
+                                    if (energy > 100) energy = 100;
+                                    creadits -= 10;
+                                    Console.WriteLine($"Current credits: {creadits} C. Currrent energy: {energy}.");
+                                    Console.WriteLine();
+                                }
                             }
                             if (supplySellect == 4)
                             {
-                                Console.WriteLine($"Purchased 20 health.");
-                                health = health + 20;
-                                creadits -= 15;
-                                Console.WriteLine($"Current credits: {creadits} C. Currrent health: {health}.");
-                                Console.WriteLine();
+                                if (creadits < 15)
+                                {
+                                    Console.WriteLine("You does not enough creadits");
+                                }
+                                else
+                                {
+                                    creadits -= 15;
+                                    Console.WriteLine($"Purchased 20 health.");
+                                    health = health + 20;
+                                    if (health > 100) health = 100;
+                                    Console.WriteLine($"Current credits: {creadits} C. Currrent health: {health}.");
+                                    Console.WriteLine();
+                                }
                             }
                         }
-
                         break;
+                    case 5:
+                        Console.WriteLine("================ MISSION STATUS ================");
+                        Console.WriteLine($"Day                      : {day}");
+                        Console.WriteLine($"Current Location         : {currentLocation}");
+                        Console.WriteLine($"Mission Score            : {missionScore}");
+                        Console.WriteLine($"Credits                  : {creadits} C");
+                        Console.WriteLine($"Fuel                     : {fuel}/100");
+                        Console.WriteLine($"Oxygen                   : {oxygen}/100");
+                        Console.WriteLine($"Energy                   : {energy}/100");
+                        Console.WriteLine($"Spaceship Health         : {health}/100");
+                        Console.WriteLine($"Inventory                : {inventory} Minerals");
+                        Console.WriteLine($"Today's Field Operations : {successfulOperation}");
+                        Console.WriteLine("---------------- EXPLORATION -------------------");
+                        Console.WriteLine($"Mercury Explored         : {(mercuryExplore ? "Yes" : "No")}");
+                        Console.WriteLine($"Mars Explored            : {(marsExplore ? "Yes" : "No")}");
+                        Console.WriteLine($"Europa Explored          : {(europaExplore ? "Yes" : "No")}");
+                        Console.WriteLine($"Mercury Minerals (Total) : {totalMercuryMinerals}/4");
+                        Console.WriteLine("================================================");
+                        Console.Write("Please press any key for continoue.");
+                        Console.ReadKey(true);
+                        break;
+
+                    case 6:
+                        if (successfulOperation < 2)
+                        {
+                            Console.WriteLine("You cannot end the day yet! You must complete at least 2 field operations.");
+                            Console.WriteLine($"Current field operations today: {successfulOperation}/2");
+                            break;
+                        }
+
+                        Console.WriteLine("It is the end of the day!");
+                        oxygen -= 5;
+                        Console.WriteLine($"5 Oxygen consumed. Remaining: {oxygen}");
+
+                        if (oxygen <= 0)
+                        {
+                            Console.WriteLine("CRITICAL FAILURE: Oxygen depleted! Spaceship life support failed. GAME OVER!");
+                            oyunDevam = false;
+                            break;
+                        }
+
+                        if (oxygen <= 15 && !canSimidi)
+                        {
+                            oxygen += 20;
+                            if (oxygen > 100) oxygen = 100;
+                            canSimidi = true;
+                            Console.WriteLine("[LIFELINE ACTIVATED] Emergency Oxygen Reserves Deployed! +20 Oxygen added.");
+                            Console.WriteLine($"Current Oxygen: {oxygen}");
+                        }
+                        mercuryMineralToplandımı = false;
+                        marsMineralToplandımı = false;
+                        EuropaMineralToplandımı = false;
+                        keşifBonusu = 0;
+                        energy += 15;
+                        if (energy > 100) energy = 100;
+                        Console.WriteLine($"15 Energy restored. Remaining: {energy}");
+                        successfulOperation = 0;
+                        day++;
+                        Console.WriteLine($"Advancing to Day {day}...");
+                        break;
+                    case 7:
+                        Console.WriteLine("Quitting mission...");
+                        Console.WriteLine($"Mission abandoned on Day {day}.");
+                        Console.WriteLine($"Final Mission Score: {missionScore}");
+                        Console.WriteLine("Thank you for playing Space Mission Simulator!");
+                        oyunDevam = false;
+                        break;
+
 
 
 
